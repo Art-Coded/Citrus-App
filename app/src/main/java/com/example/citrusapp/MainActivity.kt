@@ -19,7 +19,7 @@ import com.example.citrusapp.login.LoginScreen
 import com.example.citrusapp.onboardingScreen.OnboardingScreen
 import com.example.citrusapp.signup.SignupScreen
 import com.example.citrusapp.ui.theme.CitrusAppTheme
-
+//MAIN
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
