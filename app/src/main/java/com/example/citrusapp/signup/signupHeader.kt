@@ -2,6 +2,7 @@ package com.example.citrusapp.signup
 
 import SlideOne
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -17,16 +18,32 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.citrusapp.Components.PagerIndicator
+import com.example.citrusapp.ComponentsReusable.PagerIndicator
 import com.example.citrusapp.R
 import com.example.citrusapp.signup.slides.SlideThree
 import com.example.citrusapp.signup.slides.SlideTwo
+import kotlinx.coroutines.launch
 
 @Composable
 fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
     val pageCount = 3
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
     val isDarkTheme = isSystemInDarkTheme()
+
+    val coroutineScope = rememberCoroutineScope()
+    fun navigateToSlide(index: Int) {
+        coroutineScope.launch {
+            pagerState.animateScrollToPage(index)
+        }
+    }
+
+    fun handleBackButton() {
+        when (pagerState.currentPage) {
+            0 -> loginClick()
+            1 -> navigateToSlide(0)
+            2 -> navigateToSlide(1)
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -43,7 +60,7 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { loginClick() },
+                    onClick = { handleBackButton() },
                     modifier = Modifier
                         .height(46.dp)
                         .padding(start = 16.dp, top = 18.dp)
@@ -70,7 +87,7 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
                 Spacer(modifier = Modifier.weight(1f))
             }
 
-            // Pager indicator
+
             PagerIndicator(
                 pageCount = pageCount,
                 currentPage = pagerState.currentPage,
@@ -81,19 +98,24 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Pager for slides
             HorizontalPager(
                 state = pagerState,
+                userScrollEnabled = true,
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
             ) { page ->
                 when (page) {
                     0 -> SlideOne(
+                        loginClick1 = { loginClick1() },
+                        onNextClick = { navigateToSlide(1)}
+                    )
+                    1 -> SlideTwo(
+                        onNextClick = { navigateToSlide(2) }
+                    )
+                    2 -> SlideThree(
                         loginClick1 = { loginClick1() }
                     )
-                    1 -> SlideTwo()
-                    2 -> SlideThree()
                 }
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
@@ -34,6 +35,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.citrusapp.R
 import java.time.LocalDate
 import java.time.YearMonth
@@ -184,21 +186,28 @@ fun Calendar() {
                     .clickable { isExpanded = !isExpanded },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(
-                        id = if (isExpanded) R.drawable.ic_arrow_up
-                        else R.drawable.ic_arrow_down
-                    ),
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    modifier = Modifier.size(24.dp),
-                    colorFilter = ColorFilter.tint(
-                        if (isDarkTheme) MaterialTheme.colorScheme.onBackground
-                        else MaterialTheme.colorScheme.onBackground
+                Row {
+                    Image(
+                        painter = painterResource(
+                            id = if (isExpanded) R.drawable.ic_arrow_up
+                            else R.drawable.ic_arrow_down
+                        ),
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(
+                            if (isDarkTheme) MaterialTheme.colorScheme.onBackground
+                            else MaterialTheme.colorScheme.onBackground
+                        )
                     )
-                )
+
+                    Text(
+                        text = if (isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier.padding(start = 2.dp).alpha(0.7f),
+                        fontSize = 11.sp
+                    )
+                }
             }
 
-            // Smoothly animated expandable content
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically(

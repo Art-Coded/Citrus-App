@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,14 +49,19 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
+import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 @Composable
-fun SlideTwo() {
-    var gmail by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit) {
+    val gmail = viewModel.gmail
+    val password = viewModel.password
+    val confirmPassword = viewModel.confirmPassword
 
     val focusManager = LocalFocusManager.current
     val passwordFocusRequester = remember { FocusRequester() }
@@ -64,7 +71,6 @@ fun SlideTwo() {
     var showGmailError by remember { mutableStateOf(false) }
     val strictEmailRegex = Regex("^[A-Za-z0-9+_.-]+@(gmail\\.com|yahoo\\.com)$")
 
-    // New: show error if confirm password doesn't match password
     val showConfirmPasswordError = remember(password, confirmPassword) {
         confirmPassword.isNotEmpty() && confirmPassword != password
     }
@@ -75,7 +81,11 @@ fun SlideTwo() {
     var passwordError by remember { mutableStateOf(false) }
     var confirmPasswordError by remember { mutableStateOf(false) }
 
-
+    var isLoading by remember { mutableStateOf(false) }
+    var registrationSuccess by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
 
     Box(
@@ -110,10 +120,8 @@ fun SlideTwo() {
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(horizontal = 12.dp, vertical = 4.dp)
-
             )
         }
-
 
         Column(
             modifier = Modifier
@@ -139,11 +147,11 @@ fun SlideTwo() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Email Field
+
                     OutlinedTextField(
                         value = gmail,
                         onValueChange = {
-                            gmail = it
+                            viewModel.updateGmail(it)
                             showGmailError = false
                             emailError = false
                         },
@@ -152,7 +160,7 @@ fun SlideTwo() {
                         supportingText = {
                             Text(
                                 text = when {
-                                    emailError -> "Email field cannot be empty."
+                                    emailError -> "Email field cannot be empty"
                                     showGmailError -> "Please enter a valid email address"
                                     else -> " "
                                 },
@@ -185,11 +193,11 @@ fun SlideTwo() {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-// Password Field
+
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
-                            password = it
+                            viewModel.updatePassword(it)
                             passwordError = false
                         },
                         label = { Text("Password") },
@@ -217,7 +225,7 @@ fun SlideTwo() {
                         supportingText = {
                             when {
                                 passwordError -> Text(
-                                    text = "Password field cannot be empty.",
+                                    text = "Password field cannot be empty",
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.height(20.dp)
@@ -254,11 +262,10 @@ fun SlideTwo() {
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-// Confirm Password Field
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = {
-                            confirmPassword = it
+                            viewModel.updateConfirmPassword(it)
                             confirmPasswordError = false
                         },
                         label = { Text("Confirm Password") },
@@ -289,7 +296,7 @@ fun SlideTwo() {
                         supportingText = {
                             Text(
                                 text = when {
-                                    confirmPasswordError -> "Confirm password field cannot be empty."
+                                    confirmPasswordError -> "Confirm password field cannot be empty"
                                     showConfirmPasswordError -> "Passwords do not match"
                                     else -> " "
                                 },
@@ -314,8 +321,6 @@ fun SlideTwo() {
                 }
             }
         }
-
-
 
         Column(
             modifier = Modifier
@@ -384,7 +389,26 @@ fun SlideTwo() {
                     showGmailError = emailInvalid
 
                     if (!emailEmpty && !emailInvalid && !passwordEmpty && !confirmPasswordEmpty) {
-                        // TODO: Proceed with navigation or logic
+                        if (password == confirmPassword) {
+                            isLoading = true
+                            errorMessage = null
+
+                            coroutineScope.launch {
+                                val success = viewModel.registerUser(gmail, password)
+                                isLoading = false
+                                if (success) {
+                                    onNextClick()
+                                } else {
+                                    errorMessage = if (Firebase.auth.currentUser?.isEmailVerified == false) {
+                                        "Verification email sent again. Please check your inbox."
+                                    } else {
+                                        "Registration failed. Email may already be in use."
+                                    }
+                                }
+                            }
+                        } else {
+                            confirmPasswordError = true
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -396,7 +420,11 @@ fun SlideTwo() {
                     .height(48.dp)
                     .padding(horizontal = 12.dp)
             ) {
-                Text(text = "Next")
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White)
+                } else {
+                    Text(text = "Next")
+                }
             }
 
 

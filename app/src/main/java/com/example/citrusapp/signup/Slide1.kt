@@ -27,18 +27,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.citrusapp.R
+import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SlideOne(loginClick1: () -> Unit) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var currentError by remember { mutableStateOf("") } // Track the current error message
+fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit) {
+
+    val firstName = viewModel.firstName
+    val lastName = viewModel.lastName
+
+    var currentError by remember { mutableStateOf("") }
 
     var firstNameError by remember { mutableStateOf(false) }
     var lastNameError by remember { mutableStateOf(false) }
 
-    val maxLength = 20
+    val maxLength = 26
     val letterOnlyRegex = Regex("^[a-zA-Z ]*$")
 
     val focusManager = LocalFocusManager.current
@@ -135,9 +139,9 @@ fun SlideOne(loginClick1: () -> Unit) {
                             value = firstName,
                             onValueChange = {
                                 if (it.length <= maxLength && it.matches(letterOnlyRegex)) {
-                                    firstName = it
+                                    viewModel.updateFirstName(it)
                                     firstNameError = false
-                                    currentError = "" // Clear error when user types
+                                    currentError = ""
                                 }
                             },
                             label = { Text("First Name") },
@@ -184,9 +188,9 @@ fun SlideOne(loginClick1: () -> Unit) {
                             value = lastName,
                             onValueChange = {
                                 if (it.length <= maxLength && it.matches(letterOnlyRegex)) {
-                                    lastName = it
+                                    viewModel.updateLastName(it)
                                     lastNameError = false
-                                    currentError = "" // Clear error when user types
+                                    currentError = ""
                                 }
                             },
                             label = { Text("Last Name") },
@@ -267,7 +271,7 @@ fun SlideOne(loginClick1: () -> Unit) {
             Button(
                 onClick = {
                     if (validateFields()) {
-                        // TODO: Navigate to Next
+                        onNextClick()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(

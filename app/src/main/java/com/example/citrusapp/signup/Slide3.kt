@@ -10,8 +10,12 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -28,15 +32,34 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
-fun SlideThree() {
+fun SlideThree(loginClick1: () -> Unit) {
+    val viewModel: ProfileViewModel = viewModel()
+
     val otpValues = remember { List(6) { mutableStateOf("") } }
     val focusRequesters = remember { List(6) { FocusRequester() } }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    var isLoading by remember { mutableStateOf(false) }
+    var isVerified by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+
+    LaunchedEffect(Unit) {
+        while (!isVerified) {
+            delay(5000)
+            isVerified = viewModel.checkEmailVerification()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -64,7 +87,7 @@ fun SlideThree() {
                     .padding(horizontal = 12.dp)
             )
             Text(
-                text = "Almost there! We've sent a Verification code to your email. Enter it below to activate your account.",
+                text = "Almost there! We've sent a Verification code to your email. Kindly check your Gmail to activate your account.",
                 fontSize = 14.sp,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center,
@@ -82,7 +105,7 @@ fun SlideThree() {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "OTP Verification",
+                text = "Gmail Verification",
                 fontSize = 24.sp,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center,
@@ -92,7 +115,7 @@ fun SlideThree() {
             )
 
             Text(
-                text = "Enter the OTP sent to",
+                text = "Verify your existing Gmail account sent to",
                 fontSize = 14.sp,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center,
@@ -110,7 +133,7 @@ fun SlideThree() {
                     .padding(bottom = 40.dp)
             )
 
-            // Enhanced OTP Input Row
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -120,14 +143,14 @@ fun SlideThree() {
                         value = state.value,
                         onValueChange = { newValue ->
                             when {
-                                // Handle backspace/empty input
+
                                 newValue.isEmpty() -> {
                                     state.value = ""
                                     if (index > 0) {
                                         focusRequesters[index - 1].requestFocus()
                                     }
                                 }
-                                // Handle digit input
+
                                 newValue.length == 1 && newValue.all { char -> char.isDigit() } -> {
                                     state.value = newValue
                                     if (index < 5) {
@@ -136,7 +159,7 @@ fun SlideThree() {
                                         focusManager.clearFocus()
                                     }
                                 }
-                                // Handle paste (take first 6 digits)
+
                                 newValue.length > 1 -> {
                                     val digits = newValue.take(6).filter { it.isDigit() }
                                     digits.forEachIndexed { i, c ->
@@ -184,7 +207,7 @@ fun SlideThree() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Resend OTP Row
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -193,22 +216,62 @@ fun SlideThree() {
                     .padding(bottom = 12.dp)
             ) {
                 Text(
-                    text = "Didn't receive the OTP?",
+                    text = "Didn't receive the Verification?",
                     fontSize = 14.sp,
                     lineHeight = 16.sp
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Resend OTP",
-                    fontSize = 14.sp,
-                    lineHeight = 16.sp,
-                    color = blue_green,
-                    modifier = Modifier
-                        .clickable {
-                            // TODO: Handle resend OTP logic here
+
+                var cooldownSeconds by remember { mutableStateOf(0) }
+                var resendFailCount by remember { mutableStateOf(0) }
+                val maxResendAttempts = 3
+
+                if (cooldownSeconds > 0) {
+                    Text(
+                        text = "Resend in ${cooldownSeconds}s",
+                        fontSize = 14.sp,
+                        lineHeight = 16.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(4.dp)
+                    )
+
+                    LaunchedEffect(cooldownSeconds) {
+                        if (cooldownSeconds > 0) {
+                            delay(1000)
+                            cooldownSeconds--
                         }
-                        .padding(4.dp)
-                )
+                    }
+                } else if (resendFailCount >= maxResendAttempts) {
+                    Text(
+                        text = "Too many attempts",
+                        fontSize = 14.sp,
+                        lineHeight = 16.sp,
+                        color = Color.Red,
+                        modifier = Modifier.padding(4.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Resend",
+                        fontSize = 14.sp,
+                        lineHeight = 16.sp,
+                        color = blue_green,
+                        modifier = Modifier
+                            .clickable {
+                                coroutineScope.launch {
+                                    cooldownSeconds = 30 // Start cooldown immediately
+                                    isLoading = true
+                                    val success = viewModel.resendVerificationEmail()
+                                    isLoading = false
+                                    if (!success) {
+                                        resendFailCount++
+                                        errorMessage = "Failed to resend verification email"
+                                    }
+                                }
+                            }
+                            .padding(4.dp)
+                    )
+                }
+
             }
         }
 
@@ -220,7 +283,7 @@ fun SlideThree() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "You need to confirm your email address within 24 hours, or your account will be deleted.",
+                text = "Didn't receive any verification? Please double check your spam folder and check for any CitrusBot mail to continue",
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 16.sp,
@@ -229,7 +292,11 @@ fun SlideThree() {
             )
             Button(
                 onClick = {
-                    // TODO: Back to login
+                    if (isVerified) {
+                        loginClick1() //Back to login screen
+                    } else {
+                        errorMessage = "Please verify your email first"
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,
@@ -240,7 +307,7 @@ fun SlideThree() {
                     .height(48.dp)
                     .padding(start = 12.dp, end = 12.dp)
             ) {
-                Text(text = "Finish")
+                Text(text = if (isVerified) "Finish" else "Waiting for Verification...")
             }
         }
     }

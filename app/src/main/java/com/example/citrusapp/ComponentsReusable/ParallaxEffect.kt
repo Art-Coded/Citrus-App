@@ -1,6 +1,4 @@
-package com.example.citrusapp.Components
-
-import androidx.compose.ui.Modifier
+package com.example.citrusapp.ComponentsReusable
 
 //Box(modifier = Modifier.fillMaxSize()) {
     //Image(

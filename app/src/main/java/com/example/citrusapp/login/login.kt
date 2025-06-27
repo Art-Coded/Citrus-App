@@ -1,5 +1,6 @@
 package com.example.citrusapp.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -32,14 +34,26 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
+import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
+import kotlinx.coroutines.launch
+
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 
 @Composable
 fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: () -> Unit) {
     val isDarkTheme = isSystemInDarkTheme()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val viewModel: ProfileViewModel = viewModel()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
     var hasSubmittedEmail by remember { mutableStateOf(false) }
     val isEmailValid = remember(email) {
@@ -238,7 +252,16 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
         ) {
             Button(
                 onClick = {
-                    homeClick()// TODO: Navigate to Login
+                    isLoading = true
+                    coroutineScope.launch {
+                        val (success, message) = viewModel.loginAndCheckVerification(email, password)
+                        isLoading = false
+                        if (success) {
+                            homeClick()
+                        } else {
+                            Toast.makeText(context, message ?: "Login failed", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,
@@ -249,7 +272,12 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                     .height(48.dp)
                     .padding(start = 12.dp, end = 12.dp)
             ) {
-                Text(text = "Login")
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                } else {
+                    Text(text = "Login")
+                }
+
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -287,4 +315,8 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
             )
         }
     }
+
+
 }
+
+
