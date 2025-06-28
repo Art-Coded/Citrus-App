@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.citrusapp.login.NetworkUtils
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
@@ -12,6 +13,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 
@@ -81,15 +85,16 @@ class ProfileViewModel : ViewModel() {
             // Send email verification
             user.sendEmailVerification().await()
 
-            // Save user data to Firestore including names
-            val data = hashMapOf(
-                "firstName" to firstName,
-                "lastName" to lastName,
-                "email" to email,
-                "createdAt" to FieldValue.serverTimestamp(),
-                "emailVerified" to false
-            )
-            firestore.collection("user_metadata").document(user.uid).set(data).await()
+            // Store user data including names
+            firestore.collection("user_metadata").document(user.uid).set(
+                hashMapOf(
+                    "firstName" to firstName,
+                    "lastName" to lastName,
+                    "email" to email,
+                    "createdAt" to FieldValue.serverTimestamp(),
+                    "emailVerified" to false
+                )
+            ).await()
 
             true
         } catch (e: Exception) {
@@ -97,10 +102,45 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    suspend fun monitorVerificationStatus(onVerified: () -> Unit) {
+        val user = auth.currentUser ?: return
 
+        // Check every 5 seconds for up to 5 minutes
+        repeat(12) {
+            user.reload().await()
+            if (user.isEmailVerified) {
+                // Update Firestore
+                FirebaseFirestore.getInstance()
+                    .collection("user_metadata")
+                    .document(user.uid)
+                    .update("emailVerified", true)
+                    .await()
+                onVerified()
+                return
+            }
+            delay(5000) // Wait 5 seconds between checks
+        }
+    }
 
-    fun checkEmailVerification(): Boolean {
-        return auth.currentUser?.isEmailVerified ?: false
+    suspend fun checkVerificationAndUpdate(): Boolean {
+        return try {
+            val user = auth.currentUser
+            user?.reload()?.await() // Force refresh
+
+            if (user?.isEmailVerified == true) {
+                // Update Firestore
+                FirebaseFirestore.getInstance()
+                    .collection("user_metadata")
+                    .document(user.uid)
+                    .update("emailVerified", true)
+                    .await()
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     suspend fun resendVerificationEmail(): Boolean {
@@ -142,7 +182,7 @@ class ProfileViewModel : ViewModel() {
 
             if (createdAt != null) {
                 val elapsedMillis = Date().time - createdAt.time
-                val oneHourMillis = 60 * 1000 // 1 minute for testing (change to 60 * 60 * 1000 for production)
+                val oneHourMillis = 60 * 60 * 1000 // 1 minute for testing (change to 60 * 60 * 1000 for production)
 
                 if (elapsedMillis > oneHourMillis) {
                     // Delete both Firestore document AND auth account

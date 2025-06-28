@@ -55,8 +55,13 @@ fun SlideThree(loginClick1: () -> Unit) {
 
     LaunchedEffect(Unit) {
         while (!isVerified) {
-            delay(5000)
-            isVerified = viewModel.checkEmailVerification()
+            val success = viewModel.checkVerificationAndUpdate()
+            if (success) {
+                isVerified = true
+                loginClick1() // Automatically proceed to login
+                break
+            }
+            delay(3000) // Check every 3 seconds
         }
     }
 

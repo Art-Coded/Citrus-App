@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,6 +87,17 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    // In SlideTwo composable
+    if (registrationSuccess) {
+        LaunchedEffect(Unit) {
+            viewModel.monitorVerificationStatus {
+                // This will be called when verification is detected
+                // You can show a message or navigate automatically
+                onNextClick()
+            }
+        }
+    }
 
 
     Box(
