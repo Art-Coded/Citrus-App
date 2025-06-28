@@ -81,8 +81,11 @@ class ProfileViewModel : ViewModel() {
             // Send email verification
             user.sendEmailVerification().await()
 
-            // Save creation time to Firestore
+            // Save user data to Firestore including names
             val data = hashMapOf(
+                "firstName" to firstName,
+                "lastName" to lastName,
+                "email" to email,
                 "createdAt" to FieldValue.serverTimestamp(),
                 "emailVerified" to false
             )
@@ -127,7 +130,13 @@ class ProfileViewModel : ViewModel() {
             val createdAt = doc.getTimestamp("createdAt")?.toDate()
 
             if (user.isEmailVerified) {
-                firestore.collection("user_metadata").document(user.uid).update("emailVerified", true).await()
+                // Update Firestore with verification status while preserving other fields
+                firestore.collection("user_metadata").document(user.uid).update(
+                    mapOf(
+                        "emailVerified" to true,
+                        "lastLogin" to FieldValue.serverTimestamp() // Optional: add login timestamp
+                    )
+                ).await()
                 return Pair(true, null)
             }
 
