@@ -40,12 +40,8 @@ import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import kotlinx.coroutines.launch
 
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.ktx.Firebase
-
 @Composable
-fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: () -> Unit) {
+fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick: () -> Unit) {
     val isDarkTheme = isSystemInDarkTheme()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -60,20 +56,26 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
         email.matches(Regex("^[A-Za-z0-9._%+-]+@(gmail|yahoo)\\.com$"))
     }
 
+    // Add these state variables for validation
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
+    var authError by remember { mutableStateOf<String?>(null) }
+
     val passwordFocusRequester = remember { FocusRequester() }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .pointerInput(Unit) {
-            detectTapGestures {
-                focusManager.clearFocus()
-                keyboardController?.hide()
-            }
-        }) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                }
+            }) {
         Image(
             painter = painterResource(id = R.drawable.shapes),
             contentDescription = null,
@@ -103,7 +105,7 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
             Text(
                 text = "Login with",
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize =30.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold
                 ),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -142,10 +144,12 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                     value = email,
                     onValueChange = {
                         email = it
-                        if (hasSubmittedEmail) hasSubmittedEmail = false
+                        emailError = false
+                        hasSubmittedEmail = false
+                        authError = null
                     },
                     label = { Text("Email") },
-                    isError = hasSubmittedEmail && !isEmailValid,
+                    isError = emailError || (hasSubmittedEmail && !isEmailValid) || authError != null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -154,7 +158,10 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                     keyboardActions = KeyboardActions(
                         onNext = {
                             hasSubmittedEmail = true
-                            if (isEmailValid) {
+                            if (email.isBlank()) {
+                                emailError = true
+                            } else if (!isEmailValid) {
+                            } else {
                                 passwordFocusRequester.requestFocus()
                             }
                         }
@@ -166,58 +173,93 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                         )
                     },
                     supportingText = {
-                        Text(
-                            text = if (hasSubmittedEmail && !isEmailValid) "Please enter a valid email." else " ",
-                            color = if (hasSubmittedEmail && !isEmailValid) MaterialTheme.colorScheme.error else Color.Transparent
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = when {
+                                    emailError -> "Email field cannot be empty"
+                                    hasSubmittedEmail && !isEmailValid -> "Please enter a valid email address"
+                                    authError != null -> authError ?: " "
+                                    else -> " "
+                                },
+                                color = if (emailError || (hasSubmittedEmail && !isEmailValid) || authError != null)
+                                    MaterialTheme.colorScheme.error
+                                else
+                                    Color.Transparent,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
                     ,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        passwordError = false
+                    },
+                    label = { Text("Password") },
+                    isError = passwordError,
+                    singleLine = true,
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = 8.dp)
+                        .focusRequester(passwordFocusRequester),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (password.isBlank()) {
+                                passwordError = true
+                            } else {
+                                focusManager.clearFocus()
+                            }
+                        }
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_password),
+                            contentDescription = "Password Icon"
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            passwordVisible = !passwordVisible
+                            focusManager.clearFocus() // 👉 Clear focus here too
+                        }) {
+                            Icon(
+                                painter = painterResource(
+                                    id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                                ),
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            )
+                        }
+                    },
+
+                    supportingText = {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = if (passwordError) "Password field cannot be empty" else " ",
+                                color = if (passwordError) MaterialTheme.colorScheme.error else Color.Transparent,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.height(20.dp)
+                            )
+                        }
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                    .focusRequester(passwordFocusRequester),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_password),
-                        contentDescription = "Password Icon"
-                    )
-                },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            painter = painterResource(
-                                id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
-                            ),
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                        )
-                    }
-                }
-            )
-
-
-
-            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -252,14 +294,47 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
         ) {
             Button(
                 onClick = {
-                    isLoading = true
-                    coroutineScope.launch {
-                        val (success, message) = viewModel.loginAndCheckVerification(email, password)
-                        isLoading = false
-                        if (success) {
-                            homeClick()
-                        } else {
-                            Toast.makeText(context, message ?: "Login failed", Toast.LENGTH_LONG).show()
+                    // Validate fields before attempting login
+                    var isValid = true
+                    authError = null
+
+                    if (email.isBlank()) {
+                        emailError = true
+                        isValid = false
+                    } else if (!isEmailValid) {
+                        hasSubmittedEmail = true
+                        isValid = false
+                    }
+
+                    if (password.isBlank()) {
+                        passwordError = true
+                        isValid = false
+                    }
+
+                    if (isValid) {
+                        isLoading = true
+                        coroutineScope.launch {
+                            val (success, message) = viewModel.loginAndCheckVerification(
+                                email,
+                                password,
+                                context
+                            )
+                            isLoading = false
+                            if (success) {
+                                homeClick()
+                            } else {
+                                authError = when (message) {
+                                    "network_error" -> "Please check your internet connection"
+                                    "account_unverified" -> "Account not verified. Please check your email."
+                                    "verification_expired" -> {
+                                        // Clear both fields to allow fresh registration
+                                        email = ""
+                                        password = ""
+                                        "Verification expired. Please sign up again."
+                                    }
+                                    else -> "Login failed. Please try again"
+                                }
+                            }
                         }
                     }
                 },
@@ -273,7 +348,11 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                     .padding(start = 12.dp, end = 12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
                 } else {
                     Text(text = "Login")
                 }
@@ -296,7 +375,7 @@ fun LoginScreen(homeClick: () -> Unit,onBoardingClick: () -> Unit, signupClick: 
                     .padding(top = 4.dp)
                     .clickable(
                         onClick = {
-                                signupClick() // TODO: Navigate to Signup
+                            signupClick() // TODO: Navigate to Signup
                         },
                         role = Role.Button
                     )

@@ -249,7 +249,10 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             }
                         },
                         trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            IconButton(onClick = {
+                                passwordVisible = !passwordVisible
+                                focusManager.clearFocus()
+                            }) {
                                 Icon(
                                     painter = painterResource(
                                         id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
@@ -308,7 +311,10 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             )
                         },
                         trailingIcon = {
-                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            IconButton(onClick = {
+                                confirmPasswordVisible = !confirmPasswordVisible
+                                focusManager.clearFocus()
+                            }) {
                                 Icon(
                                     painter = painterResource(
                                         id = if (confirmPasswordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
@@ -421,7 +427,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                     .padding(horizontal = 12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
                 } else {
                     Text(text = "Next")
                 }

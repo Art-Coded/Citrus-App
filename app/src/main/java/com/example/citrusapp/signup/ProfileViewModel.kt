@@ -1,10 +1,13 @@
 package com.example.citrusapp.signup
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.citrusapp.login.NetworkUtils
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
@@ -106,10 +109,18 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    suspend fun loginAndCheckVerification(email: String, password: String): Pair<Boolean, String?> {
+    suspend fun loginAndCheckVerification(
+        email: String,
+        password: String,
+        context: Context
+    ): Pair<Boolean, String?> {
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            return Pair(false, "network_error")
+        }
+
         return try {
             val authResult = Firebase.auth.signInWithEmailAndPassword(email, password).await()
-            val user = authResult.user ?: return Pair(false, "Login failed")
+            val user = authResult.user ?: return Pair(false, "login_failed")
 
             val firestore = FirebaseFirestore.getInstance()
             val doc = firestore.collection("user_metadata").document(user.uid).get().await()
@@ -122,19 +133,21 @@ class ProfileViewModel : ViewModel() {
 
             if (createdAt != null) {
                 val elapsedMillis = Date().time - createdAt.time
-                val oneHourMillis = 60 * 60 * 1000
+                val oneHourMillis = 60 * 1000 // 1 minute for testing (change to 60 * 60 * 1000 for production)
 
                 if (elapsedMillis > oneHourMillis) {
-                    user.delete().await()
+                    // Delete both Firestore document AND auth account
                     firestore.collection("user_metadata").document(user.uid).delete().await()
-                    return Pair(false, "Your verification link expired. Account deleted.")
+                    user.delete().await() // This deletes the auth account
+                    return Pair(false, "verification_expired")
                 }
             }
 
-            Firebase.auth.signOut()
-            Pair(false, "Please verify your email first.")
+            Pair(false, "account_unverified")
+        } catch (e: FirebaseNetworkException) {
+            Pair(false, "network_error")
         } catch (e: Exception) {
-            Pair(false, "Login failed: ${e.localizedMessage}")
+            Pair(false, "login_failed")
         }
     }
 

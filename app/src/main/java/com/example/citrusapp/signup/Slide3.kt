@@ -53,7 +53,6 @@ fun SlideThree(loginClick1: () -> Unit) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
-
     LaunchedEffect(Unit) {
         while (!isVerified) {
             delay(5000)
