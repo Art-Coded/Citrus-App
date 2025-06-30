@@ -71,9 +71,9 @@ dependencies {
 
     implementation(libs.lottie.compose)
 
-    implementation("androidx.compose.foundation:foundation:1.6.0")
+    implementation(libs.androidx.foundation.v160)
 
-    implementation("androidx.compose.animation:animation:1.5.0")
+    implementation(libs.androidx.animation)
 
     implementation(libs.androidx.foundation.vversion)
 
@@ -81,7 +81,10 @@ dependencies {
 
     implementation (libs.androidx.lifecycle.viewmodel.compose)
 
-    implementation("com.google.firebase:firebase-firestore-ktx:24.10.3")
+    implementation(libs.firebase.firestore.ktx.v24103)
+
+    implementation (libs.androidx.datastore.preferences)
+
 
 
 

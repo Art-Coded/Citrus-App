@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
+import com.example.citrusapp.data.DataStoreManager
 import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import kotlinx.coroutines.launch
@@ -69,6 +70,17 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    var rememberMeChecked by remember { mutableStateOf(false) }
+    val dataStore = remember { DataStoreManager(context) }
+
+    LaunchedEffect(Unit) {
+        rememberMeChecked = dataStore.isRemembered()
+        if (rememberMeChecked) {
+            email = dataStore.getRememberedEmail() ?: ""
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -269,7 +281,6 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    var rememberMeChecked by remember { mutableStateOf(false) }
 
                     Checkbox(
                         checked = rememberMeChecked,
@@ -323,6 +334,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                             )
                             isLoading = false
                             if (success) {
+                                dataStore.saveCredentials(email, rememberMeChecked)
                                 homeClick()
                             } else {
                                 authError = when (message) {
@@ -399,8 +411,6 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
             )
         }
     }
-
-
 }
 
 object NetworkUtils {
