@@ -235,7 +235,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                         }) {
                             Icon(
                                 painter = painterResource(
-                                    id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                                    id = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                                 ),
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password"
                             )
@@ -294,7 +294,6 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
         ) {
             Button(
                 onClick = {
-                    // Validate fields before attempting login
                     var isValid = true
                     authError = null
 
@@ -324,23 +323,27 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                                 homeClick()
                             } else {
                                 authError = when (message) {
-                                    "network_error" -> "Please check your internet connection"
-                                    "account_unverified" -> "Account not verified. Please check your email."
+                                    "network_error" -> "Please check your internet connection and try again" //IF theres no internet connection
+                                    "account_unverified" -> "Account not verified. Please check your email" //IF the account is not verified yet
                                     "verification_expired" -> {
-                                        // Clear both fields to allow fresh registration
-                                        email = ""
-                                        password = ""
-                                        "Verification expired. Please sign up again."
+                                        email = "" // <--- resets user input in the outlined text fields
+                                        password = "" // < --- resets user input in the outlined text fields
+                                        "Verification expired. Please sign up again." // IF the unverified account got expired
                                     }
-                                    else -> "Login failed. Please try again"
+                                    "user_not_found" -> "Account doesn't exist. Please use an existing account." // IF user doesnt exist
+                                    else -> "Something went wrong. Please try again later" //Something else i think
                                 }
+
                             }
                         }
                     }
                 },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = blue_green.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -356,7 +359,6 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                 } else {
                     Text(text = "Login")
                 }
-
             }
 
             Spacer(modifier = Modifier.height(12.dp))

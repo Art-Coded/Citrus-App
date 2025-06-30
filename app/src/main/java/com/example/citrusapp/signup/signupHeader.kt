@@ -100,7 +100,7 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
 
             HorizontalPager(
                 state = pagerState,
-                userScrollEnabled = true,
+                userScrollEnabled = false,
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
@@ -114,8 +114,10 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
                         onNextClick = { navigateToSlide(2) }
                     )
                     2 -> SlideThree(
-                        loginClick1 = { loginClick1() }
+                        loginClick1 = { loginClick1() },
+                        isDarkTheme = isSystemInDarkTheme()
                     )
+
                 }
             }
         }

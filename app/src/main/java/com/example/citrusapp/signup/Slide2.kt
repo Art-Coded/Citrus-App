@@ -267,7 +267,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             }) {
                                 Icon(
                                     painter = painterResource(
-                                        id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                                        id = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                                     ),
                                     contentDescription = if (passwordVisible) "Hide password" else "Show password"
                                 )
@@ -329,7 +329,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             }) {
                                 Icon(
                                     painter = painterResource(
-                                        id = if (confirmPasswordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                                        id = if (confirmPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                                     ),
                                     contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
                                 )
@@ -429,9 +429,12 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                         }
                     }
                 },
+                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = blue_green.copy(alpha = 0.5f),
+                    disabledContentColor = Color.White.copy(alpha = 0.5f)
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -439,12 +442,15 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                     .padding(horizontal = 12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
                 } else {
                     Text(text = "Next")
                 }
             }
-
 
         }
     }

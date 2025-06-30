@@ -10,6 +10,7 @@ import com.example.citrusapp.login.NetworkUtils
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -103,24 +104,37 @@ class ProfileViewModel : ViewModel() {
     }
 
     suspend fun monitorVerificationStatus(onVerified: () -> Unit) {
-        val user = auth.currentUser ?: return
+        val user = auth.currentUser
 
-        // Check every 5 seconds for up to 5 minutes
+        // ✅ SAFEGUARD: Make sure the user is valid before checking
+        if (user == null || user.email.isNullOrEmpty()) {
+            return
+        }
+
         repeat(12) {
-            user.reload().await()
-            if (user.isEmailVerified) {
-                // Update Firestore
-                FirebaseFirestore.getInstance()
-                    .collection("user_metadata")
-                    .document(user.uid)
-                    .update("emailVerified", true)
-                    .await()
-                onVerified()
+            try {
+                user.reload().await()
+                if (user.isEmailVerified) {
+                    // Update Firestore
+                    FirebaseFirestore.getInstance()
+                        .collection("user_metadata")
+                        .document(user.uid)
+                        .update("emailVerified", true)
+                        .await()
+                    onVerified()
+                    return
+                }
+                delay(5000)
+            } catch (e: FirebaseAuthInvalidUserException) {
+                // User might’ve been deleted before reload
+                return
+            } catch (e: Exception) {
+                // Some other error happened
                 return
             }
-            delay(5000) // Wait 5 seconds between checks
         }
     }
+
 
     suspend fun checkVerificationAndUpdate(): Boolean {
         return try {
@@ -193,11 +207,14 @@ class ProfileViewModel : ViewModel() {
             }
 
             Pair(false, "account_unverified")
+        } catch (e: FirebaseAuthInvalidUserException) {
+            return Pair(false, "user_not_found")
         } catch (e: FirebaseNetworkException) {
-            Pair(false, "network_error")
+            return Pair(false, "network_error")
         } catch (e: Exception) {
-            Pair(false, "login_failed")
+            return Pair(false, "login_failed")
         }
+
     }
 
 }
