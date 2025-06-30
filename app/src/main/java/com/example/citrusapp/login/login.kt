@@ -323,15 +323,15 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                                 homeClick()
                             } else {
                                 authError = when (message) {
-                                    "network_error" -> "Please check your internet connection and try again" //IF theres no internet connection
-                                    "account_unverified" -> "Account not verified. Please check your email" //IF the account is not verified yet
+                                    "network_error" -> "Please check your internet connection and try again." //IF theres no internet connection
+                                    "account_unverified" -> "Account not verified. Please check your email to verify." //IF the account is not verified yet
                                     "verification_expired" -> {
                                         email = "" // <--- resets user input in the outlined text fields
                                         password = "" // < --- resets user input in the outlined text fields
                                         "Verification expired. Please sign up again." // IF the unverified account got expired
                                     }
                                     "user_not_found" -> "Account doesn't exist. Please use an existing account." // IF user doesnt exist
-                                    else -> "Something went wrong. Please try again later" //Something else i think
+                                    else -> "Something went wrong. Please try again later." //Something else i think
                                 }
 
                             }

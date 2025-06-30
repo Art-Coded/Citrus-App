@@ -11,6 +11,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -63,25 +64,14 @@ class ProfileViewModel : ViewModel() {
     }
 
 
-    suspend fun registerUser(email: String, password: String): Boolean {
+    suspend fun registerUser(email: String, password: String): Pair<Boolean, String?> {
         return try {
             val auth = Firebase.auth
             val firestore = FirebaseFirestore.getInstance()
 
-            val methods = auth.fetchSignInMethodsForEmail(email).await()
-            if (methods.signInMethods?.isNotEmpty() == true) {
-                val user = auth.currentUser
-                return if (user != null && user.email == email && !user.isEmailVerified) {
-                    // Resend verification if same unverified user
-                    user.sendEmailVerification().await()
-                    true
-                } else {
-                    false // Email already in use by someone else
-                }
-            }
-
+            // Attempt to create user directly
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
-            val user = authResult.user ?: return false
+            val user = authResult.user ?: return Pair(false, "Registration failed. Please try again.")
 
             // Send email verification
             user.sendEmailVerification().await()
@@ -97,16 +87,19 @@ class ProfileViewModel : ViewModel() {
                 )
             ).await()
 
-            true
+            Pair(true, "Verification email sent. Please check your inbox.")
+        } catch (e: FirebaseAuthUserCollisionException) {
+            Pair(false, "This email is already in use by another account.")
+        } catch (e: FirebaseNetworkException) {
+            Pair(false, "Network error. Please check your connection.")
         } catch (e: Exception) {
-            false
+            Pair(false, "Registration failed. ${e.message}")
         }
     }
 
     suspend fun monitorVerificationStatus(onVerified: () -> Unit) {
         val user = auth.currentUser
 
-        // ✅ SAFEGUARD: Make sure the user is valid before checking
         if (user == null || user.email.isNullOrEmpty()) {
             return
         }
@@ -216,5 +209,14 @@ class ProfileViewModel : ViewModel() {
         }
 
     }
+
+    fun reset() {
+        firstName = ""
+        lastName = ""
+        gmail = ""
+        password = ""
+        confirmPassword = ""
+    }
+
 
 }

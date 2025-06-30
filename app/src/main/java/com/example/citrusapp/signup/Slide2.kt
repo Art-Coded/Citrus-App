@@ -3,6 +3,7 @@ package com.example.citrusapp.signup.slides
 import android.content.Intent
 import android.net.Uri
 import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -85,8 +86,15 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
     var isLoading by remember { mutableStateOf(false) }
     var registrationSuccess by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            errorMessage = null
+        }
+    }
 
     // In SlideTwo composable
     if (registrationSuccess) {
@@ -267,7 +275,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             }) {
                                 Icon(
                                     painter = painterResource(
-                                        id = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                                        id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
                                     ),
                                     contentDescription = if (passwordVisible) "Hide password" else "Show password"
                                 )
@@ -329,7 +337,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             }) {
                                 Icon(
                                     painter = painterResource(
-                                        id = if (confirmPasswordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+                                        id = if (confirmPasswordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
                                     ),
                                     contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
                                 )
@@ -412,15 +420,12 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             errorMessage = null
 
                             coroutineScope.launch {
-                                val success = viewModel.registerUser(gmail, password)
+                                val (success, message) = viewModel.registerUser(gmail, password)
                                 isLoading = false
-                                if (success) {
-                                    onNextClick()
-                                } else {
-                                    errorMessage = if (Firebase.auth.currentUser?.isEmailVerified == false) {
-                                        "Verification email sent again. Please check your inbox."
-                                    } else {
-                                        "Registration failed. Email may already be in use."
+                                message?.let {
+                                    errorMessage = it
+                                    if (success) {
+                                        onNextClick()
                                     }
                                 }
                             }
@@ -429,12 +434,9 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                         }
                     }
                 },
-                enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,
-                    contentColor = Color.White,
-                    disabledContainerColor = blue_green.copy(alpha = 0.5f),
-                    disabledContentColor = Color.White.copy(alpha = 0.5f)
+                    contentColor = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -442,15 +444,12 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                     .padding(horizontal = 12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
                 } else {
                     Text(text = "Next")
                 }
             }
+
 
         }
     }

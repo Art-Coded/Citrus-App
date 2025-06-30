@@ -34,18 +34,19 @@ import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import com.example.citrusapp.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
     val viewModel: ProfileViewModel = viewModel()
     val coroutineScope = rememberCoroutineScope()
+    val userEmail = viewModel.gmail
 
     var isVerified by remember { mutableStateOf(false) }
     var animationType by remember { mutableStateOf("loading") }
-    val userEmail = FirebaseAuth.getInstance().currentUser?.email
-
 
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -61,6 +62,12 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
             R.raw.loading_light
         }
     }
+
+    LaunchedEffect(Unit) {
+        isVerified = false
+        animationType = "loading"
+    }
+
 
     val resolvedFileName = when (animationType) {
         "loading" -> if (isDarkTheme) "loading_light" else "loading_dark"
@@ -80,7 +87,6 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
         }
     }
 
-    // 🧠 Start monitoring verification status when composable launches
     LaunchedEffect(Unit) {
         viewModel.monitorVerificationStatus {
             animationType = "check" // ✅ switch to "check" when verified
@@ -124,23 +130,26 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
                 .align(Alignment.TopCenter)
                 .padding(top = 30.dp)
         ) {
-            Text(
-                text = "Verify Your Email",
-                fontWeight = FontWeight.Bold,
-                fontSize = 34.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-            )
-            Text(
-                text = "Almost there! We've sent a Verification code to your email. Kindly check your Gmail to activate your account.",
-                fontSize = 14.sp,
-                lineHeight = 16.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            if (!isVerified) {
+                Text(
+                    text = "Verify Your Email",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 34.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                )
+                Text(
+                    text = "You're almost there! Please confirm your email address within an hour, or your account will be deleted.",
+                    fontSize = 14.sp,
+                    lineHeight = 16.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
 
-            )
+                )
+            }
+
         }
 
         Column(
@@ -170,7 +179,7 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
                         .padding(bottom = 4.dp)
                 )
 
-                if (!isVerified && userEmail != null) {
+                if (!isVerified && userEmail.isNotBlank()) {
                     Text(
                         text = userEmail,
                         fontSize = 14.sp,
@@ -179,10 +188,7 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
                         fontStyle = FontStyle.Italic
                     )
                 }
-
             }
-
-
 
             //LOTTIE HERE
             LottieAnimation(
@@ -271,7 +277,7 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
 
 
             Text(
-                text = if (isVerified) "Continue back to Login page" else "If you can't see any verification mails, please try to double check your spam folder and check for any CitrusBot mail to continue",
+                text = if (isVerified) "Yippie! Continue back to Login page?" else "If you can't see any verification mails, please try to double check your spam folder and check for any CitrusBot mail to continue",
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 16.sp,
@@ -280,7 +286,11 @@ fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
             )
 
             Button(
-                onClick = { loginClick1() },
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    viewModel.reset()
+                    loginClick1()
+                },
                 enabled = isVerified,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = blue_green,

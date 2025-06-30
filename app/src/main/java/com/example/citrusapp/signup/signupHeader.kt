@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -59,16 +60,20 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { handleBackButton() },
+                Box(
                     modifier = Modifier
                         .height(46.dp)
                         .padding(start = 16.dp, top = 18.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back"
-                    )
+                    IconButton(
+                        onClick = { handleBackButton() },
+                        modifier = Modifier.alpha(if (pagerState.currentPage == 2) 0f else 1f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back"
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
