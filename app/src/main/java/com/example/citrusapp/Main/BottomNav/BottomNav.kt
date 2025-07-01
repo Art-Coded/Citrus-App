@@ -62,7 +62,7 @@ sealed class NavItem(val route: String, val label: String, val lottieIcon: Strin
 }
 
 @Composable
-fun BottomNavScreen() {
+fun BottomNavScreen(rootNavController: NavHostController) {
     val navController = rememberNavController()
     val isDarkTheme = isSystemInDarkTheme()
 
@@ -119,7 +119,10 @@ fun BottomNavScreen() {
                 InboxScreen()
             }
             composable("account") {
-                AccountScreen(navController = navController)
+                AccountScreen(
+                    navController = navController,
+                    rootNavController = rootNavController  // Add this
+                )
             }
 
             // Home routes

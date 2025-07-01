@@ -1,5 +1,6 @@
 package com.example.citrusapp.Main.Account
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,51 +19,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.citrusapp.R
 import com.example.citrusapp.ui.theme.blue_green
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountScreen(navController: NavController? = null) {
+fun AccountScreen(navController: NavController? = null, rootNavController: NavHostController? = null) {
 
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    var showBottomSheetSwitch by remember { mutableStateOf(false) }
     var showBottomSheetLogout by remember { mutableStateOf(false) }
-
-    if (showBottomSheetSwitch) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheetSwitch = false },
-            sheetState = sheetState
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Switch Account",
-                        fontSize = 18.sp,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-        }
-    }
-
+    val context = LocalContext.current
 
     if (showBottomSheetLogout) {
         ModalBottomSheet(
@@ -92,7 +69,12 @@ fun AccountScreen(navController: NavController? = null) {
                         .height(56.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .clickable {
-                            // TODO: Handle logout
+                            // Handle logout
+                            FirebaseAuth.getInstance().signOut()
+                            Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                            rootNavController?.navigate("login") {
+                                popUpTo("BottomNav") { inclusive = true }
+                            }
                             showBottomSheetLogout = false
                         }
                         .padding(horizontal = 16.dp),
@@ -244,7 +226,7 @@ fun AccountScreen(navController: NavController? = null) {
         }
 
         Text(
-            text = "Login",
+            text = "Log out",
             modifier = Modifier.padding(start = 34.dp ,top = 16.dp),
             fontSize = 13.sp
         )
@@ -257,8 +239,7 @@ fun AccountScreen(navController: NavController? = null) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                SettingsItem(title = "Switch Account", iconResId = R.drawable.ic_switch, onClick = {scope.launch { showBottomSheetSwitch = true } })
-                SettingsItem(title = "Log out", iconResId = R.drawable.ic_logout, onClick = {scope.launch { showBottomSheetLogout = true } })
+                SettingsItem(title = "Log out Account", iconResId = R.drawable.ic_logout, onClick = {scope.launch { showBottomSheetLogout = true } })
             }
         }
     }
