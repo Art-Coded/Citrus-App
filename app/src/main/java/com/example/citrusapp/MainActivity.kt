@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
@@ -19,6 +20,8 @@ import com.example.citrusapp.login.LoginScreen
 import com.example.citrusapp.onboardingScreen.OnboardingScreen
 import com.example.citrusapp.signup.SignupScreen
 import com.example.citrusapp.ui.theme.CitrusAppTheme
+import com.google.firebase.auth.FirebaseAuth
+
 //MAIN
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,11 +31,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             CitrusAppTheme {
                 val navController = rememberNavController()
+                val startDestination = remember {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user != null && user.isEmailVerified) {
+                        "BottomNav"
+                    } else {
+                        "onboarding"
+                    }
+                }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "onboarding",
+                        startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding),
                         enterTransition = { fadeIn(animationSpec = tween(200)) },
                         exitTransition = { fadeOut(animationSpec = tween(200)) },

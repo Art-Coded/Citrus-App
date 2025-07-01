@@ -3,7 +3,6 @@ package com.example.citrusapp.login
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -39,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
-import com.example.citrusapp.data.DataStoreManager
+import com.example.citrusapp.data.RememberMeFunction
 import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import kotlinx.coroutines.launch
@@ -60,7 +59,6 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
         email.matches(Regex("^[A-Za-z0-9._%+-]+@(gmail|yahoo)\\.com$"))
     }
 
-    // Add these state variables for validation
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
@@ -72,7 +70,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var rememberMeChecked by remember { mutableStateOf(false) }
-    val dataStore = remember { DataStoreManager(context) }
+    val dataStore = remember { RememberMeFunction(context) }
 
     LaunchedEffect(Unit) {
         rememberMeChecked = dataStore.isRemembered()

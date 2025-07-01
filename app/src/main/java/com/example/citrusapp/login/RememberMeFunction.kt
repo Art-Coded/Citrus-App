@@ -4,12 +4,10 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
-//Remember Me Functionality
 private val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
-class DataStoreManager(private val context: Context) {
+class RememberMeFunction(private val context: Context) {
     companion object {
         val REMEMBER_ME = booleanPreferencesKey("remember_me")
         val EMAIL = stringPreferencesKey("email")
