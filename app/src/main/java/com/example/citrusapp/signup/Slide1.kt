@@ -97,8 +97,9 @@ fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = viewModel(),
                 modifier = Modifier
                     .padding(horizontal = 12.dp),
             )
+
             Text(
-                text = "Tell us your name so people can know who you are! We'll only use your name to create a unique identity within the app, so please make sure it's accurate.",
+                text = "Tell us your name so others can recognize you! We’ll use your name to help create a unique and authentic identity within the app. Please ensure it's appropriate and accurate.",
                 fontSize = 14.sp,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center,
@@ -229,6 +230,7 @@ fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = viewModel(),
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         )
                     }
+
                 }
             }
         }
@@ -240,6 +242,14 @@ fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = viewModel(),
                 .padding(bottom = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = "NOTE - Using offensive or misleading names may result in a ban.",
+                fontSize = 14.sp,
+                lineHeight = 16.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            )
             Row(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 12.dp),
