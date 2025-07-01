@@ -20,11 +20,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieAnimatable
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.citrusapp.R
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,6 +52,10 @@ fun BottomNavItem(
         animationSpec = tween(300)
     )
 
+    val user = FirebaseAuth.getInstance().currentUser
+    val profileImageUrl = user?.photoUrl
+
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -74,14 +80,25 @@ fun BottomNavItem(
                     .graphicsLayer(alpha = iconAlpha)
             )
         } else {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_email),
-                contentDescription = "Account Icon",
-                modifier = Modifier
-                    .size(20.dp)
-                    .graphicsLayer(alpha = iconAlpha),
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
-            )
+            if (profileImageUrl != null) {
+                AsyncImage(
+                    model = profileImageUrl,
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .graphicsLayer(alpha = iconAlpha)
+                )
+            } else {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_email),
+                    contentDescription = "Account Icon",
+                    modifier = Modifier
+                        .size(20.dp)
+                        .graphicsLayer(alpha = iconAlpha),
+                    tint = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
+                )
+            }
         }
 
         Text(
