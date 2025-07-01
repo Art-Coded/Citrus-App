@@ -354,6 +354,8 @@ fun HomeDrawer(
                             }
                         }
 
+                        HorizontalDivider()
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -400,6 +402,8 @@ fun HomeDrawer(
                                 )
                             }
                         }
+
+                        HorizontalDivider()
 
                         Row(
                             modifier = Modifier
@@ -448,8 +452,8 @@ fun HomeDrawer(
                             }
                         }
                     }
+                    HorizontalDivider()
 
-                    // Version text at the bottom, outside the scrollable content
                     Text(
                         text = "Version 1.0.0",
                         fontSize = 12.sp,
