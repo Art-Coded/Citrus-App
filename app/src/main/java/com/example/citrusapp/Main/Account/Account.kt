@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,9 +27,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieAnimatable
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.citrusapp.R
 import com.example.citrusapp.ui.theme.blue_green
 import com.google.firebase.auth.FirebaseAuth
+import getRawResId
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,6 +48,10 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
     var showBottomSheetLogout by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    val composition by rememberLottieComposition(
+        spec = LottieCompositionSpec.RawRes(R.raw.sad_emote2)
+    )
+
     if (showBottomSheetLogout) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheetLogout = false },
@@ -49,11 +60,27 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(320.dp)
                     .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+
+                Text(
+                    text = "Please don't go ):",
+                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .padding(bottom = 8.dp)
+                )
+
                 Text(
                     text = "Are you sure you want to logout?",
                     fontSize = 18.sp,

@@ -120,7 +120,7 @@ fun BottomNavScreen(rootNavController: NavHostController) {
             composable("account") {
                 AccountScreen(
                     navController = navController,
-                    rootNavController = rootNavController  // Add this
+                    rootNavController = rootNavController
                 )
             }
 

@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("BottomNav") {
-                            BottomNavScreen(rootNavController = navController)  // Pass the navController here
+                            BottomNavScreen(rootNavController = navController)
                         }
 
                     }
