@@ -451,17 +451,8 @@ fun HomeDrawer(
                                 )
                             }
                         }
+                        HorizontalDivider()
                     }
-                    HorizontalDivider()
-
-                    Text(
-                        text = "Version 1.0.0",
-                        fontSize = 12.sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
         },

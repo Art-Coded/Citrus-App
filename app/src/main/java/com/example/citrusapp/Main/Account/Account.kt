@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -263,6 +264,15 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
                 SettingsItem(title = "Log out Account", iconResId = R.drawable.ic_logout, onClick = {scope.launch { showBottomSheetLogout = true } })
             }
         }
+
+        Text(
+            text = "Version 1.0.0",
+            fontSize = 12.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
