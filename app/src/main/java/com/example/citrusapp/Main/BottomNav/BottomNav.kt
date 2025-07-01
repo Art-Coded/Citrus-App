@@ -23,7 +23,6 @@ import androidx.navigation.compose.*
 import com.example.citrusapp.Main.Account.AccountEdit.AccountEditScreen
 import com.example.citrusapp.Main.Account.AccountScreen
 import com.example.citrusapp.Main.Account.Contribute.ContributeScreen
-import com.example.citrusapp.Main.Account.Logout.LogoutScreen
 import com.example.citrusapp.Main.Account.Notification.NotificationScreen
 import com.example.citrusapp.Main.Account.Privacy.PrivacyScreen
 import com.example.citrusapp.Main.Account.Report.ReportScreen
@@ -212,9 +211,6 @@ fun BottomNavScreen(rootNavController: NavHostController) {
             }
             composable("switchacc") {
                 SwitchAccountScreen()
-            }
-            composable("logout") {
-                LogoutScreen()
             }
         }
     }

@@ -76,8 +76,10 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
         rememberMeChecked = dataStore.isRemembered()
         if (rememberMeChecked) {
             email = dataStore.getRememberedEmail() ?: ""
+            password = dataStore.getRememberedPassword() ?: ""
         }
     }
+
 
 
     Box(
@@ -282,7 +284,12 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
 
                     Checkbox(
                         checked = rememberMeChecked,
-                        onCheckedChange = { rememberMeChecked = it }
+                        onCheckedChange = { isChecked ->
+                            rememberMeChecked = isChecked
+                            coroutineScope.launch {
+                                dataStore.saveRememberMeState(isChecked)
+                            }
+                        }
                     )
                     Text(text = "Remember me", fontSize = 14.sp)
                 }
@@ -332,7 +339,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                             )
                             isLoading = false
                             if (success) {
-                                dataStore.saveCredentials(email, rememberMeChecked)
+                                dataStore.saveCredentials(email, password, rememberMeChecked)
                                 homeClick()
                             } else {
                                 authError = when (message) {

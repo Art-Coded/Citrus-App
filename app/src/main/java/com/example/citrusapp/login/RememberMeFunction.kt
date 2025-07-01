@@ -11,15 +11,18 @@ class RememberMeFunction(private val context: Context) {
     companion object {
         val REMEMBER_ME = booleanPreferencesKey("remember_me")
         val EMAIL = stringPreferencesKey("email")
+        val PASSWORD = stringPreferencesKey("password")
     }
 
-    suspend fun saveCredentials(email: String, rememberMe: Boolean) {
+    suspend fun saveCredentials(email: String, password: String, rememberMe: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[REMEMBER_ME] = rememberMe
             if (rememberMe) {
                 prefs[EMAIL] = email
+                prefs[PASSWORD] = password
             } else {
                 prefs.remove(EMAIL)
+                prefs.remove(PASSWORD)
             }
         }
     }
@@ -29,8 +32,20 @@ class RememberMeFunction(private val context: Context) {
         return prefs[EMAIL]
     }
 
+    suspend fun getRememberedPassword(): String? {
+        val prefs = context.dataStore.data.first()
+        return prefs[PASSWORD]
+    }
+
+
     suspend fun isRemembered(): Boolean {
         val prefs = context.dataStore.data.first()
         return prefs[REMEMBER_ME] ?: false
+    }
+
+    suspend fun saveRememberMeState(rememberMe: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[REMEMBER_ME] = rememberMe
+        }
     }
 }

@@ -69,7 +69,7 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
                         .height(56.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .clickable {
-                            // Handle logout
+
                             FirebaseAuth.getInstance().signOut()
                             Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
                             rootNavController?.navigate("login") {
@@ -109,9 +109,6 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
             }
         }
     }
-
-
-
 
     Column(
         modifier = Modifier
