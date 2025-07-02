@@ -1,7 +1,13 @@
 package com.example.citrusapp.Main.Account
 
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -34,7 +43,11 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.citrusapp.R
 import com.example.citrusapp.ui.theme.blue_green
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +58,46 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
     val scrollState = rememberScrollState()
     var showBottomSheetLogout by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+    val auth = Firebase.auth
+    val db = Firebase.firestore
+
+    // Fetch user data when screen loads
+    LaunchedEffect(Unit) {
+        try {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                // Get user data from Firestore (user_metadata collection)
+                val document = db.collection("user_metadata")
+                    .document(currentUser.uid)
+                    .get()
+                    .await()
+
+                firstName = document.getString("firstName") ?: ""
+                lastName = document.getString("lastName") ?: ""
+                email = currentUser.email ?: document.getString("email") ?: ""
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error fetching user data", Toast.LENGTH_SHORT).show()
+            Log.e("AccountScreen", "Error fetching user data", e)
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // Create an image picker launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let { profileImageUri = it }
+        }
+    )
 
     val composition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(R.raw.sad_emote2)
@@ -145,28 +198,71 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_email),
-                contentDescription = "Profile Picture",
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-            )
+            // Profile picture with edit button
+            Box(
+                modifier = Modifier.size(96.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val painter = if (profileImageUri != null) {
+                    rememberAsyncImagePainter(profileImageUri)
+                } else {
+                    painterResource(id = R.drawable.default_user)
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Image(
+                    painter = painter,
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .border(0.8.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                )
 
-            Text(
-                text = "Art Lyndone Acuesta Hemplo",
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 20.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+                Box(
+                    modifier = Modifier
+                        .offset(x = 28.dp, y = 28.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(blue_green)
+                        .clickable {
+                            galleryLauncher.launch("image/*")
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Edit profile picture",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
 
-            Text(
-                text = "Lyndonehemplo1@gmail.com",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } else {
+                // Display user's full name (combining firstName and lastName)
+                Text(
+                    text = if (firstName.isNotEmpty() || lastName.isNotEmpty()) {
+                        "$firstName $lastName".trim()
+                    } else {
+                        "No name provided"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                // Display user's email
+                Text(
+                    text = email.ifEmpty { "No email" },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
 
 
