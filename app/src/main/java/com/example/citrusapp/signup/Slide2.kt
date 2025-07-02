@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -16,7 +15,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -55,8 +53,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
 import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
 @Composable
@@ -71,7 +67,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var showGmailError by remember { mutableStateOf(false) }
-    val strictEmailRegex = Regex("^[A-Za-z0-9+_.-]+@(gmail\\.com|yahoo\\.com)$")
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(gmail).matches()
 
     val showConfirmPasswordError = remember(password, confirmPassword) {
         confirmPassword.isNotEmpty() && confirmPassword != password
@@ -202,7 +198,7 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                             onNext = {
                                 if (gmail.isBlank()) {
                                     emailError = true
-                                } else if (!strictEmailRegex.matches(gmail)) {
+                                } else if (!Patterns.EMAIL_ADDRESS.matcher(gmail).matches()) {
                                     showGmailError = true
                                 } else {
                                     passwordFocusRequester.requestFocus()
@@ -407,7 +403,8 @@ fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit)
                     val emailEmpty = gmail.isBlank()
                     val passwordEmpty = password.isBlank()
                     val confirmPasswordEmpty = confirmPassword.isBlank()
-                    val emailInvalid = !emailEmpty && !strictEmailRegex.matches(gmail)
+                    val emailInvalid = !emailEmpty && !Patterns.EMAIL_ADDRESS.matcher(gmail).matches()
+
 
                     emailError = emailEmpty
                     passwordError = passwordEmpty

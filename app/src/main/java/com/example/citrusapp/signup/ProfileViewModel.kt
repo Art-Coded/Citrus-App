@@ -200,8 +200,6 @@ class ProfileViewModel : ViewModel() {
             }
 
             Pair(false, "account_unverified")
-        } catch (e: FirebaseAuthInvalidUserException) {
-            return Pair(false, "user_not_found")
         } catch (e: FirebaseNetworkException) {
             return Pair(false, "network_error")
         } catch (e: Exception) {

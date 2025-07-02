@@ -3,6 +3,7 @@ package com.example.citrusapp.login
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -55,9 +56,8 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
     var isLoading by remember { mutableStateOf(false) }
 
     var hasSubmittedEmail by remember { mutableStateOf(false) }
-    val isEmailValid = remember(email) {
-        email.matches(Regex("^[A-Za-z0-9._%+-]+@(gmail|yahoo)\\.com$"))
-    }
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+
 
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
@@ -350,8 +350,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
                                         password = "" // < --- resets user input in the outlined text fields
                                         "Verification expired. Please sign up again." // IF the unverified account got expired
                                     }
-                                    "user_not_found" -> "Account doesn't exist. Please use an existing account." // IF user doesnt exist
-                                    else -> "Something went wrong. Please try again later." //Something else i think
+                                    else -> "Login Unsuccessful. Something went wrong, please try again later." //Something else i think
                                 }
 
                             }
