@@ -57,8 +57,8 @@ fun Shortcuts(navController: NavController? = null, scrollToCalendar: (() -> Uni
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
         ) {
-            ShortcutItem(R.drawable.grades, "Grades") {
-                navController?.navigate("grades")// Grades
+            ShortcutItem(R.drawable.grades, "Survey") {
+                navController?.navigate("survey")// Grades
             }
             ShortcutItem(R.drawable.payments, "Payments") {
                 navController?.navigate("payments")// Payments

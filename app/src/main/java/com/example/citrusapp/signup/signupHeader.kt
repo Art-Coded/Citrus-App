@@ -128,3 +128,7 @@ fun SignupScreen(loginClick: () -> Unit, loginClick1: () -> Unit) {
         }
     }
 }
+
+
+
+
