@@ -32,7 +32,7 @@ import com.example.citrusapp.Main.Home.Shortcuts.Shortcuts
 import com.example.citrusapp.R
 import com.example.citrusapp.ui.theme.blue_green
 import kotlinx.coroutines.launch
-
+//MEOW
 @Composable
 fun HomeScreen(navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
