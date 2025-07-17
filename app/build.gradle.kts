@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    id("kotlin-kapt") // REQUIRED for Hilt code generation
+    id("dagger.hilt.android.plugin") // REQUIRED for Hilt to work
 }
 
 android {
@@ -89,7 +91,8 @@ dependencies {
 
 
 
-
-
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-compiler:2.51")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
 }

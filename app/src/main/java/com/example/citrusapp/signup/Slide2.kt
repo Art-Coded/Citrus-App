@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
 import com.example.citrusapp.signup.ProfileViewModel
@@ -56,7 +57,7 @@ import com.example.citrusapp.ui.theme.blue_green
 import kotlinx.coroutines.launch
 
 @Composable
-fun SlideTwo(viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit) {
+fun SlideTwo(viewModel: ProfileViewModel = hiltViewModel(), onNextClick: () -> Unit) {
     val gmail = viewModel.gmail
     val password = viewModel.password
     val confirmPassword = viewModel.confirmPassword

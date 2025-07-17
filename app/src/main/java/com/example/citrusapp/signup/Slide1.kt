@@ -26,13 +26,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.citrusapp.R
 import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = viewModel(), onNextClick: () -> Unit) {
+fun SlideOne(loginClick1: () -> Unit, viewModel: ProfileViewModel = hiltViewModel(), onNextClick: () -> Unit) {
 
     val firstName = viewModel.firstName
     val lastName = viewModel.lastName

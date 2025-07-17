@@ -21,8 +21,10 @@ import com.example.citrusapp.onboardingScreen.OnboardingScreen
 import com.example.citrusapp.signup.SignupScreen
 import com.example.citrusapp.ui.theme.CitrusAppTheme
 import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.AndroidEntryPoint
 
 //MAIN
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         WindowCompat.setDecorFitsSystemWindows(window, false)

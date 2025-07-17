@@ -5,27 +5,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.citrusapp.login.NetworkUtils
-import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Job
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Date
+import javax.inject.Inject
 
-class ProfileViewModel : ViewModel() {
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
+) : ViewModel() {
 
-    private val auth: FirebaseAuth = Firebase.auth
-
-    //MUTABLES
     var firstName by mutableStateOf("")
         private set
 
@@ -41,8 +39,6 @@ class ProfileViewModel : ViewModel() {
     var confirmPassword by mutableStateOf("")
         private set
 
-
-    //STRINGS
     fun updateFirstName(newName: String) {
         firstName = newName
     }
@@ -63,20 +59,13 @@ class ProfileViewModel : ViewModel() {
         confirmPassword = newConfirmPassword
     }
 
-
     suspend fun registerUser(email: String, password: String): Pair<Boolean, String?> {
         return try {
-            val auth = Firebase.auth
-            val firestore = FirebaseFirestore.getInstance()
-
-            // Attempt to create user directly
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
             val user = authResult.user ?: return Pair(false, "Registration failed. Please try again.")
 
-            // Send email verification
             user.sendEmailVerification().await()
 
-            // Store user data including names
             firestore.collection("user_metadata").document(user.uid).set(
                 hashMapOf(
                     "firstName" to firstName,
@@ -98,9 +87,9 @@ class ProfileViewModel : ViewModel() {
     }
 
     suspend fun monitorVerificationStatus(onVerified: () -> Unit) {
-        val user = auth.currentUser
+        val user = auth.currentUser ?: return
 
-        if (user == null || user.email.isNullOrEmpty()) {
+        if (user.email.isNullOrEmpty()) {
             return
         }
 
@@ -108,9 +97,7 @@ class ProfileViewModel : ViewModel() {
             try {
                 user.reload().await()
                 if (user.isEmailVerified) {
-                    // Update Firestore
-                    FirebaseFirestore.getInstance()
-                        .collection("user_metadata")
+                    firestore.collection("user_metadata")
                         .document(user.uid)
                         .update("emailVerified", true)
                         .await()
@@ -119,25 +106,20 @@ class ProfileViewModel : ViewModel() {
                 }
                 delay(5000)
             } catch (e: FirebaseAuthInvalidUserException) {
-                // User might’ve been deleted before reload
                 return
             } catch (e: Exception) {
-                // Some other error happened
                 return
             }
         }
     }
 
-
     suspend fun checkVerificationAndUpdate(): Boolean {
         return try {
             val user = auth.currentUser
-            user?.reload()?.await() // Force refresh
+            user?.reload()?.await()
 
             if (user?.isEmailVerified == true) {
-                // Update Firestore
-                FirebaseFirestore.getInstance()
-                    .collection("user_metadata")
+                firestore.collection("user_metadata")
                     .document(user.uid)
                     .update("emailVerified", true)
                     .await()
@@ -159,29 +141,23 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    suspend fun loginAndCheckVerification(
-        email: String,
-        password: String,
-        context: Context
-    ): Pair<Boolean, String?> {
+    suspend fun loginAndCheckVerification(email: String, password: String, context: Context): Pair<Boolean, String?> {
         if (!NetworkUtils.isNetworkAvailable(context)) {
             return Pair(false, "network_error")
         }
 
         return try {
-            val authResult = Firebase.auth.signInWithEmailAndPassword(email, password).await()
+            val authResult = auth.signInWithEmailAndPassword(email, password).await()
             val user = authResult.user ?: return Pair(false, "login_failed")
 
-            val firestore = FirebaseFirestore.getInstance()
             val doc = firestore.collection("user_metadata").document(user.uid).get().await()
             val createdAt = doc.getTimestamp("createdAt")?.toDate()
 
             if (user.isEmailVerified) {
-                // Update Firestore with verification status while preserving other fields
                 firestore.collection("user_metadata").document(user.uid).update(
                     mapOf(
                         "emailVerified" to true,
-                        "lastLogin" to FieldValue.serverTimestamp() // Optional: add login timestamp
+                        "lastLogin" to FieldValue.serverTimestamp()
                     )
                 ).await()
                 return Pair(true, null)
@@ -189,12 +165,11 @@ class ProfileViewModel : ViewModel() {
 
             if (createdAt != null) {
                 val elapsedMillis = Date().time - createdAt.time
-                val oneHourMillis = 60 * 60 * 1000 // 1 minute for testing (change to 60 * 60 * 1000 for production)
+                val oneHourMillis = 60 * 60 * 1000 // 1 hour
 
                 if (elapsedMillis > oneHourMillis) {
-                    // Delete both Firestore document AND auth account
                     firestore.collection("user_metadata").document(user.uid).delete().await()
-                    user.delete().await() // This deletes the auth account
+                    user.delete().await()
                     return Pair(false, "verification_expired")
                 }
             }
@@ -205,7 +180,6 @@ class ProfileViewModel : ViewModel() {
         } catch (e: Exception) {
             return Pair(false, "login_failed")
         }
-
     }
 
     fun reset() {
@@ -215,6 +189,4 @@ class ProfileViewModel : ViewModel() {
         password = ""
         confirmPassword = ""
     }
-
-
 }

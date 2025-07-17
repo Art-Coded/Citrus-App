@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.citrusapp.R
 import com.example.citrusapp.data.RememberMeFunction
@@ -50,7 +51,7 @@ fun LoginScreen(homeClick: () -> Unit, onBoardingClick: () -> Unit, signupClick:
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val viewModel: ProfileViewModel = viewModel()
+    val viewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }

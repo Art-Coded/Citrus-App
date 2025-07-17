@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -41,7 +42,7 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun SlideThree(loginClick1: () -> Unit, isDarkTheme: Boolean) {
-    val viewModel: ProfileViewModel = viewModel()
+    val viewModel: ProfileViewModel = hiltViewModel()
     val coroutineScope = rememberCoroutineScope()
     val userEmail = viewModel.gmail
 
