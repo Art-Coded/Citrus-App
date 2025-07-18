@@ -72,12 +72,17 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        isLoading = true
-        val success = profileViewModel.fetchUserProfile()
-        if (!success) {
-            Toast.makeText(context, "Error fetching user data", Toast.LENGTH_SHORT).show()
+        // Only fetch if we haven't loaded the profile yet
+        if (firstName.isEmpty() && lastName.isEmpty() && email.isEmpty()) {
+            isLoading = true
+            val success = profileViewModel.fetchUserProfile()
+            if (!success) {
+                Toast.makeText(context, "Error fetching user data", Toast.LENGTH_SHORT).show()
+            }
+            isLoading = false
+        } else {
+            isLoading = false
         }
-        isLoading = false
     }
 
     // Create an image picker launcher

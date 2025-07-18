@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import java.util.Date
@@ -183,18 +184,40 @@ class ProfileViewModel @Inject constructor(
     }
 
 
+    private var isProfileFetched by mutableStateOf(false)
+    private var isFetching by mutableStateOf(false)
 
-    suspend fun fetchUserProfile(): Boolean {
-        val user = auth.currentUser ?: return false
+    suspend fun fetchUserProfile(forceRefresh: Boolean = false): Boolean {
+        // If already fetched and not forcing refresh, return cached data
+        if (isProfileFetched && !forceRefresh) {
+            return true
+        }
+
+        // If already fetching, wait
+        if (isFetching) {
+            return false
+        }
+
+        isFetching = true
         return try {
-            val snapshot = firestore.collection("user_metadata").document(user.uid).get().await()
-            firstName = snapshot.getString("firstName") ?: ""
-            lastName = snapshot.getString("lastName") ?: ""
-            gmail = snapshot.getString("email") ?: ""
+            val user = auth.currentUser ?: return false.also { isFetching = false }
+            val snapshot = firestore.collection("user_metadata")
+                .document(user.uid)
+                .get()
+                .await()
+
+            snapshot.getString("firstName")?.let { firstName = it }
+            snapshot.getString("lastName")?.let { lastName = it }
+            snapshot.getString("email")?.let { gmail = it }
+
+            isProfileFetched = true
             true
         } catch (e: Exception) {
             false
+        } finally {
+            isFetching = false
         }
     }
+
 
 }
