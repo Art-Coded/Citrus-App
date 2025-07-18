@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.citrusapp.ComponentsReusable.DebounceHelper
 import com.example.citrusapp.login.NetworkUtils
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
@@ -24,6 +25,7 @@ class ProfileViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : ViewModel() {
+    private val debounceHelper = DebounceHelper(300L) // 300ms debounce time
 
     var firstName by mutableStateOf("")
         private set
@@ -184,39 +186,24 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    private var isProfileFetched by mutableStateOf(false)
-    private var isFetching by mutableStateOf(false)
+    suspend fun fetchUserProfile(): Boolean {
+        return debounceHelper.debounce {
+            try {
+                val user = auth.currentUser ?: return@debounce false
+                val snapshot = firestore.collection("user_metadata")
+                    .document(user.uid)
+                    .get()
+                    .await()
 
-    suspend fun fetchUserProfile(forceRefresh: Boolean = false): Boolean {
-        // If already fetched and not forcing refresh, return cached data
-        if (isProfileFetched && !forceRefresh) {
-            return true
-        }
+                snapshot.getString("firstName")?.let { firstName = it }
+                snapshot.getString("lastName")?.let { lastName = it }
+                snapshot.getString("email")?.let { gmail = it }
 
-        // If already fetching, wait
-        if (isFetching) {
-            return false
-        }
-
-        isFetching = true
-        return try {
-            val user = auth.currentUser ?: return false.also { isFetching = false }
-            val snapshot = firestore.collection("user_metadata")
-                .document(user.uid)
-                .get()
-                .await()
-
-            snapshot.getString("firstName")?.let { firstName = it }
-            snapshot.getString("lastName")?.let { lastName = it }
-            snapshot.getString("email")?.let { gmail = it }
-
-            isProfileFetched = true
-            true
-        } catch (e: Exception) {
-            false
-        } finally {
-            isFetching = false
-        }
+                true
+            } catch (e: Exception) {
+                false
+            }
+        } ?: false
     }
 
 
