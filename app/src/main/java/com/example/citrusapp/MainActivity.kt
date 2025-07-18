@@ -48,9 +48,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = startDestination,
                         modifier = Modifier.padding(innerPadding),
                         enterTransition = { fadeIn(animationSpec = tween(200)) },
-                        exitTransition = { fadeOut(animationSpec = tween(200)) },
-                        popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(200)) },
-                        popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(200)) }
+                        exitTransition = { fadeOut(animationSpec = tween(200)) }
                     ) {
                         composable("onboarding") {
                             OnboardingScreen(
