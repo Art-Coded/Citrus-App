@@ -12,6 +12,16 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object FirebaseModule {
 
+    //                                             Singleton use cases guide v1.0
+
+    //             provideFirebaseAuth                                                    provideFirestore
+
+    //Check who is currently logged in (auth.currentUser)                         Store first name, last name, etc.
+    //        Sign in, sign out, create account                        Store custom app data per user (roles, points, preferences)
+    //           Send email verification                                    Check if user's email is verified (mirrored info)
+    //          Update password or email                                      Update profile fields (first name, last name)
+    //                Delete user
+
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
