@@ -26,35 +26,27 @@ class ProfileViewModel @Inject constructor(
 
     var firstName by mutableStateOf("")
         private set
-
     var lastName by mutableStateOf("")
         private set
-
     var gmail by mutableStateOf("")
         private set
-
     var password by mutableStateOf("")
         private set
-
     var confirmPassword by mutableStateOf("")
         private set
 
     fun updateFirstName(newName: String) {
         firstName = newName
     }
-
     fun updateLastName(newName: String) {
         lastName = newName
     }
-
     fun updateGmail(newGmail: String) {
         gmail = newGmail
     }
-
     fun updatePassword(newPassword: String) {
         password = newPassword
     }
-
     fun updateConfirmPassword(newConfirmPassword: String) {
         confirmPassword = newConfirmPassword
     }
@@ -189,4 +181,20 @@ class ProfileViewModel @Inject constructor(
         password = ""
         confirmPassword = ""
     }
+
+
+
+    suspend fun fetchUserProfile(): Boolean {
+        val user = auth.currentUser ?: return false
+        return try {
+            val snapshot = firestore.collection("user_metadata").document(user.uid).get().await()
+            firstName = snapshot.getString("firstName") ?: ""
+            lastName = snapshot.getString("lastName") ?: ""
+            gmail = snapshot.getString("email") ?: ""
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 }

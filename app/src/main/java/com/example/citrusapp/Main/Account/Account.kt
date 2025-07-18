@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
@@ -41,6 +42,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.citrusapp.R
+import com.example.citrusapp.signup.ProfileViewModel
 import com.example.citrusapp.ui.theme.blue_green
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -53,6 +55,8 @@ import kotlinx.coroutines.tasks.await
 @Composable
 fun AccountScreen(navController: NavController? = null, rootNavController: NavHostController? = null) {
 
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -61,34 +65,19 @@ fun AccountScreen(navController: NavController? = null, rootNavController: NavHo
 
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    val firstName = profileViewModel.firstName
+    val lastName = profileViewModel.lastName
+    val email = profileViewModel.gmail
+
     var isLoading by remember { mutableStateOf(true) }
-    val auth = Firebase.auth
-    val db = Firebase.firestore
 
-    // Fetch user data when screen loads
     LaunchedEffect(Unit) {
-        try {
-            val currentUser = auth.currentUser
-            if (currentUser != null) {
-                // Get user data from Firestore (user_metadata collection)
-                val document = db.collection("user_metadata")
-                    .document(currentUser.uid)
-                    .get()
-                    .await()
-
-                firstName = document.getString("firstName") ?: ""
-                lastName = document.getString("lastName") ?: ""
-                email = currentUser.email ?: document.getString("email") ?: ""
-            }
-        } catch (e: Exception) {
+        isLoading = true
+        val success = profileViewModel.fetchUserProfile()
+        if (!success) {
             Toast.makeText(context, "Error fetching user data", Toast.LENGTH_SHORT).show()
-            Log.e("AccountScreen", "Error fetching user data", e)
-        } finally {
-            isLoading = false
         }
+        isLoading = false
     }
 
     // Create an image picker launcher

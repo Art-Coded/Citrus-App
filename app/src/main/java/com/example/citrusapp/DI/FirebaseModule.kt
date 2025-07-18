@@ -14,7 +14,7 @@ object FirebaseModule {
 
     //                                             Singleton use cases guide v1.0
 
-    //             provideFirebaseAuth                                                    provideFirestore
+    //             provideFirebaseAuth                                                      provideFirestore
 
     //Check who is currently logged in (auth.currentUser)                         Store first name, last name, etc.
     //        Sign in, sign out, create account                        Store custom app data per user (roles, points, preferences)
